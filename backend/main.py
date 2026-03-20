@@ -1,9 +1,15 @@
 import os
+import logging
+import time
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("RagfolioAPI")
 
 try:
     from .rag_query import answer_question
@@ -25,6 +31,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    logger.debug(f"Request start: {request.method} {request.url}")
+    try:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        logger.debug(f"Request end: {request.method} {request.url} - Status: {response.status_code} - Time: {process_time:.2f}s")
+        return response
+    except Exception as e:
+        logger.exception(f"Unhandled exception during request: {request.method} {request.url}")
+        raise
 
 class AskRequest(BaseModel):
     """
@@ -51,22 +69,29 @@ async def health():
 @app.post("/api/ask", response_model=AskResponse)
 async def ask(request: AskRequest):
     """
-    Primary RAG endpoint that takes a user question, retrieves context,
-    and returns an AI-generated answer.
+    Enhanced RAG endpoint with detailed logging and error handling.
     """
-    # Validate that the question is not empty or whitespace-only
     if not request.question or not request.question.strip():
+        logger.debug("Validation failed: Empty question received.")
         raise HTTPException(
             status_code=400,
             detail="Question cannot be empty or whitespace only.",
         )
 
     try:
-        # Integrate with the RAG query engine
+        logger.debug(f"Incoming question: {request.question}")
         answer = answer_question(request.question)
+
+        # Example of logging observability data (adjust based on actual implementation)
+        logger.debug({
+            "retrieved_context": "[Example context items]",  # Replace with actual context retrieval logs
+            "gemini_prompt": "[Example Gemini prompt]",  # Replace with actual prompt
+            "gemini_output": answer,  # Replace with actual Gemini output
+        })
+
         return AskResponse(answer=answer)
     except Exception as e:
-        # Proper exception handling with error details
+        logger.exception("Error during RAG processing.")
         raise HTTPException(
             status_code=500,
             detail=f"An error occurred during RAG processing: {str(e)}",
