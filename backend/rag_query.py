@@ -9,9 +9,34 @@ from fastembed import TextEmbedding
 
 BASE_DIR = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
-ENV_PATH = os.path.join(PROJECT_ROOT, ".env")
-if os.path.exists(ENV_PATH):
-    load_dotenv(ENV_PATH)
+
+# Check multiple locations for .env file
+ENV_PATHS = [
+    os.path.join(PROJECT_ROOT, ".env"),  # ragfolio/.env
+    os.path.join(BASE_DIR, ".env"),  # backend/.env
+    ".env",  # current directory
+]
+
+ENV_PATH = None
+for path in ENV_PATHS:
+    if os.path.exists(path):
+        ENV_PATH = path
+        break
+
+# Load .env if found
+if ENV_PATH:
+    load_dotenv(ENV_PATH, override=False)
+
+
+def _get_gemini_api_key() -> str:
+    """Get GEMINI_API_KEY from environment variables."""
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY environment variable is not set. "
+            "Set it in your .env file or as an environment variable before running the application."
+        )
+    return api_key
 
 # Must match rag/ingest.py (lightweight ONNX model)
 EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
@@ -88,12 +113,7 @@ def build_prompt(question: str, context_chunks: List[str]) -> str:
 
 
 def call_gemini(prompt: str) -> str:
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "GEMINI_API_KEY environment variable is not set. "
-            "Set it before running the application."
-        )
+    api_key = _get_gemini_api_key()
 
     headers = {
         "Content-Type": "application/json",

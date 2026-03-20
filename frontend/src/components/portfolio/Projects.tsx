@@ -13,8 +13,8 @@ export function Projects() {
             whileHover={{ scale: 1.02 }}
             className="p-6 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-default"
           >
-            <h3 className="font-medium text-white text-lg">Project one</h3>
-            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">Short description of the project and technologies used.</p>
+            <h3 className="font-medium text-white text-lg">Hisab Kitab</h3>
+            <p className="text-sm text-zinc-300 mt-2 leading-relaxed">Digital ledger and credit management system for small businesses. Enables credit/debit tracking, transaction history, and real-time reporting dashboards. Built with Django, React, SQLite, and Recharts.</p>
           </motion.div>
 
           <motion.div
@@ -25,8 +25,8 @@ export function Projects() {
             whileHover={{ scale: 1.02 }}
             className="p-6 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-default"
           >
-            <h3 className="font-medium text-white text-lg">Project two</h3>
-            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">Short description of the project and technologies used.</p>
+            <h3 className="font-medium text-white text-lg">Kelsa Setu</h3>
+            <p className="text-sm text-zinc-300 mt-2 leading-relaxed">Bilingual job platform connecting gig workers with employers. Features real-time job matching, video resumes, and location-based discovery. Built with Django REST, React, Tailwind, and Supabase.</p>
           </motion.div>
         </div>
       </div>

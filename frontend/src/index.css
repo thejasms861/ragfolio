@@ -5,8 +5,8 @@
 @layer base {
   html {
     @apply text-zinc-100 antialiased;
-    background-color: #09090b;
-    background-image: radial-gradient(circle at 50% 0%, #18181b 0%, #09090b 100%);
+    background-color: #0a0e27;
+    background-image: linear-gradient(135deg, #0f1a3a 0%, #0a0e27 50%, #051225 100%);
     background-attachment: fixed;
   }
 }

@@ -1,6 +1,6 @@
-import os
 import logging
 import time
+import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -11,10 +11,14 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("RagfolioAPI")
 
+# Import RAG query function
 try:
     from .rag_query import answer_question
-except (ImportError, ValueError):
-    from rag_query import answer_question
+except ImportError:
+    try:
+        from rag_query import answer_question
+    except ImportError:
+        raise ImportError("Failed to import 'answer_question' from 'rag_query'. Ensure rag_query.py is in the same directory.")
 
 app = FastAPI(
     title="Ragfolio RAG API",
@@ -80,6 +84,8 @@ async def ask(request: AskRequest):
 
     try:
         logger.debug(f"Incoming question: {request.question}")
+
+        # Call the RAG engine
         answer = answer_question(request.question)
 
         # Example of logging observability data (adjust based on actual implementation)
@@ -87,6 +93,7 @@ async def ask(request: AskRequest):
             "retrieved_context": "[Example context items]",  # Replace with actual context retrieval logs
             "gemini_prompt": "[Example Gemini prompt]",  # Replace with actual prompt
             "gemini_output": answer,  # Replace with actual Gemini output
+            "model_parameters": {"temperature": 0.7, "model": "gemini-2.5-flash-lite"},  # Gemini model used
         })
 
         return AskResponse(answer=answer)
@@ -120,4 +127,17 @@ if os.path.exists(FRONTEND_DIST_DIR):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+
+    # Load configuration from environment variables with sensible defaults
+    host = os.getenv("UVICORN_HOST", "0.0.0.0")
+    port = int(os.getenv("UVICORN_PORT", 8000))
+    reload = os.getenv("UVICORN_RELOAD", "true").lower() in ("true", "1")
+    log_level = os.getenv("UVICORN_LOG_LEVEL", "debug")
+
+    uvicorn.run(
+        "main:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level=log_level,
+    )

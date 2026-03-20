@@ -32,3 +32,6 @@ Transform the current boilerplate and placeholders into a professional, high-imp
 
 ### OUTPUT FORMAT
 Provide the full code for each modified component (`Hero.tsx`, `About.tsx`, `Skills.tsx`, `Experience.tsx`, `Projects.tsx`, `Education.tsx`, `Header.tsx`, `Footer.tsx`) as drop-in replacements.
+
+
+hey i want a little more dark blue background 
