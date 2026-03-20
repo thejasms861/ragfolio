@@ -29,14 +29,29 @@ if ENV_PATH:
 
 
 def _get_gemini_api_key() -> str:
-    """Get GEMINI_API_KEY from environment variables."""
+    """Get GEMINI_API_KEY from environment variables or .env files."""
     api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "GEMINI_API_KEY environment variable is not set. "
-            "Set it in your .env file or as an environment variable before running the application."
-        )
-    return api_key
+    if api_key:
+        return api_key
+    
+    # Fallback: manually read from .env files
+    for env_path in ENV_PATHS:
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("GEMINI_API_KEY="):
+                            key = line.split("=", 1)[1].strip().strip('"\'')
+                            if key:
+                                return key
+            except (IOError, UnicodeDecodeError):
+                continue
+    
+    raise RuntimeError(
+        "GEMINI_API_KEY environment variable is not set. "
+        "Set it in your .env file or as an environment variable before running the application."
+    )
 
 # Must match rag/ingest.py (lightweight ONNX model)
 EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
