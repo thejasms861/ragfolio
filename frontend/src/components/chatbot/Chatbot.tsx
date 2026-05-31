@@ -13,6 +13,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'Online' | 'Offline'>('Offline');
+  const [isOpen, setIsOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -27,10 +28,11 @@ export function Chatbot() {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, loading]);
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, loading, isOpen]);
 
-  // Health check logic
   const checkBackendHealth = async () => {
     try {
       const controller = new AbortController();
@@ -87,69 +89,101 @@ export function Chatbot() {
   };
 
   return (
-    <section className="py-12 px-4 border-t border-zinc-800/50 relative">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
-
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Chatbot</h2>
-          <span className={`text-sm font-medium ${backendStatus === 'Online' ? 'text-green-500' : 'text-red-500'}`}>
-            Backend: {backendStatus}
-          </span>
-        </div>
-
-        <motion.div
-          layout
-          initial={false}
-          animate={{ height: messages.length === 0 ? 240 : 500 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="rounded-3xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl overflow-hidden flex flex-col shadow-2xl shadow-blue-500/5 ring-1 ring-white/5"
-        >
-          <div
-            ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar"
+    <>
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed bottom-6 right-6 w-16 h-16 bg-zinc-900 rounded-3xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-zinc-800 z-50 group hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-shadow cursor-pointer"
           >
-            <AnimatePresence initial={false}>
-              {messages.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="h-full flex flex-col items-center justify-center text-center px-4"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center mb-4 border border-zinc-700/50 shadow-inner">
-                    <span className="text-2xl">✨</span>
-                  </div>
-                  <div>
-                    <h3 className="text-zinc-100 font-semibold text-lg mb-1">Get to know me</h3>
-                    <p className="text-zinc-500 text-sm max-w-[280px] leading-relaxed">
-                      Ask about my specific skills, professional experience, or previous projects.
-                    </p>
-                  </div>
-                </motion.div>
-              ) : (
-                messages.map((m, i) => <ChatMessage key={i} role={m.role} content={m.content} />)
-              )}
-            </AnimatePresence>
+            <div className={`absolute top-0 right-0 w-4 h-4 rounded-full border-2 border-zinc-900 -mt-1 -mr-1 ${backendStatus === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-100">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              <path d="M8 10h.01"></path>
+              <path d="M12 10h.01"></path>
+              <path d="M16 10h.01"></path>
+            </svg>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
-            {loading && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex justify-start mb-4"
-              >
-                <div className="bg-zinc-800/80 rounded-2xl rounded-tl-none px-5 py-3 border border-zinc-700/50">
-                  <div className="flex gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
-                  </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed bottom-6 right-6 w-[calc(100vw-3rem)] md:w-[400px] z-50 flex flex-col"
+          >
+            <div className="bg-zinc-900/95 backdrop-blur-xl rounded-3xl border border-zinc-800 shadow-2xl flex flex-col overflow-hidden max-h-[80vh] min-h-[500px]">
+              <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50 shrink-0">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-zinc-100">Chatbot</h2>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${backendStatus === 'Online' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                    {backendStatus}
+                  </span>
                 </div>
-              </motion.div>
-            )}
-          </div>
-          <ChatInput onSend={handleSend} disabled={loading} isFirstTime={messages.length === 0} />
-        </motion.div>
-      </div>
-    </section>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-zinc-800 rounded-xl transition-colors text-zinc-400 hover:text-zinc-100 cursor-pointer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <div
+                ref={scrollContainerRef}
+                className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 custom-scrollbar"
+              >
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center py-8">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center mb-4 border border-zinc-700/50 shadow-inner">
+                      <span className="text-2xl">✨</span>
+                    </div>
+                    <div>
+                      <h3 className="text-zinc-100 font-semibold text-lg mb-2">Get to know me</h3>
+                      <p className="text-zinc-500 text-sm max-w-[280px] leading-relaxed mx-auto">
+                        Ask about my specific skills, professional experience, or previous projects.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((m, i) => <ChatMessage key={i} role={m.role} content={m.content} />)
+                )}
+
+                {loading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className="bg-zinc-800 rounded-2xl rounded-tl-none px-5 py-3.5 border border-zinc-700/50 shadow-sm">
+                      <div className="flex gap-1.5 items-center h-2">
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              <div className="shrink-0 bg-zinc-950/50 border-t border-zinc-800/50">
+                <ChatInput onSend={handleSend} disabled={loading} isFirstTime={messages.length === 0} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
